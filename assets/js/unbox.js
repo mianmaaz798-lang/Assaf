@@ -39,7 +39,7 @@
       '<div class="unbox-panel">' +
       '<div class="unbox-viewer" tabindex="0" role="img" aria-roledescription="3D viewer">' +
       '<div class="viewer-loader" aria-hidden="true"><i class="skel"></i>Preparing your box…</div>' +
-      '<div class="viewer-hint" aria-hidden="true">Drag to rotate · ← → keys</div></div>' +
+      '<div class="viewer-hint" aria-hidden="true">Drag to turn · Space to spray</div></div>' +
       '<div class="unbox-info"><button class="icon-btn unbox-close" data-unbox-close aria-label="Close">' + I.close + '</button><div data-unbox-body></div></div>' +
       '</div>';
     document.body.appendChild(root);
@@ -50,6 +50,7 @@
       if (e.key === 'Tab') trap(e);
     });
     info.addEventListener('click', onInfoClick);
+    viewer.addEventListener('assaf:spray', function () { ASSAF.Sound.play('spray'); ASSAF.haptic(20); });
   }
   function trap(e) {
     var f = $$('button, [href], input, select, [tabindex]:not([tabindex="-1"])', root).filter(function (el) { return !el.disabled && el.offsetParent !== null; });
@@ -72,6 +73,7 @@
         return '<button role="radio" data-ub-size="' + k + '"' + (x.available ? '' : ' class="unavailable"') + ' aria-checked="' + (k === size) + '">' + esc(x.label) + '<small>' + (x.available ? money(x.price) : 'Sold out') + '</small></button>';
       }).join('') + '</div></div>') +
       insert('<div class="unbox-actions"><button class="btn btn-gold" data-ub-add>Add to bag</button>' +
+        '<button class="btn btn-ghost" data-ub-spray aria-label="Spray ' + esc(p.name) + '">' + I.spray + ' Spray</button>' +
         '<button class="icon-btn heart" style="width:48px;height:48px;border:1px solid var(--line-2)" data-wish="' + p.id + '" aria-pressed="' + ASSAF.Wish.has(p.id) + '" aria-label="Save to wishlist">' + I.heart + '</button>' +
         '<a class="btn btn-ghost" href="product.html?id=' + p.id + '">Full details</a></div>') +
       (n ? insert('<div class="insert-card"><h3>Fragrance notes</h3><dl>' +
@@ -98,6 +100,7 @@
       return;
     }
     if (e.target.closest('[data-ub-add]')) pack();
+    if (e.target.closest('[data-ub-spray]') && stage3d && !busy) stage3d.spray();
   }
 
   /* ------------------------------------------------------------------ shared-element (FLIP) helpers */
@@ -145,7 +148,7 @@
       viewer.classList.add('is-ready');
       st.reset();
       return st.open().then(function () { busy = false; });
-    }).catch(function () { busy = false; root.classList.add('is-unboxed'); });
+    }).catch(function (err) { if (window.console) console.warn('unbox:', err); busy = false; root.classList.add('is-unboxed'); });
     // the spec inserts start unfolding as the lid opens
     setTimeout(function () { if (cur === p && !root.classList.contains('is-closing')) root.classList.add('is-unboxed'); }, reduced() ? 0 : 900);
   }

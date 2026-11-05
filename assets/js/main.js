@@ -44,6 +44,14 @@
       try {
         var C = window.AudioContext || window.webkitAudioContext; if (!C) return;
         var ctx = this.ctx || (this.ctx = new C()), t = ctx.currentTime;
+        if (kind === 'spray') { // soft "psst": filtered noise burst
+          var len = Math.floor(ctx.sampleRate * .45), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+          for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+          var src = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), gn = ctx.createGain();
+          src.buffer = buf; hp.type = 'highpass'; hp.frequency.value = 2500; gn.gain.value = .05;
+          src.connect(hp).connect(gn).connect(ctx.destination); src.start(t);
+          return;
+        }
         var o = ctx.createOscillator(), g = ctx.createGain();
         o.type = kind === 'tape' ? 'triangle' : 'sine';
         var f = { pop: [660, 990], drop: [220, 110], tape: [900, 500] }[kind] || [440, 660];
@@ -198,6 +206,7 @@
     moon: '<svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
     soundOn: '<svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
     soundOff: '<svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
+    spray: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="9" width="8" height="12" rx="2"/><path d="M7 9V6h4v3M11 6h2"/><path d="M16 5h.01M19 4h.01M18 7h.01M21 6h.01M17 9h.01"/></svg>',
     cube: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg>',
     close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
