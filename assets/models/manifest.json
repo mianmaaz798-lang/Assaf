@@ -1,0 +1,6 @@
+{
+  "_readme": "List optional 3D assets here. models: product ids that have assets/models/<id>.glb. boxFront/boxLid: optional texture files in this folder (null = generated Assaf artwork).",
+  "models": [],
+  "boxFront": null,
+  "boxLid": null
+}

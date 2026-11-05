@@ -32,8 +32,10 @@
     var v = p.variants && p.variants[opts.variant || 0];
     var src = (v && v.image) || p.image;
     if (src) {
-      return '<img class="bottle-img" src="' + src + '" alt="' + String(p.name).replace(/"/g, '&quot;') + '"' +
-        (opts.eager ? '' : ' loading="lazy"') + ' decoding="async" draggable="false" />';
+      var sm = src.replace('/products/', '/products/sm/');
+      var sizes = opts.eager ? '(max-width: 900px) 90vw, 560px' : '(max-width: 600px) 46vw, (max-width: 1100px) 30vw, 300px';
+      return '<img class="bottle-img" src="' + sm + '" srcset="' + sm + ' 400w, ' + src + ' 800w" sizes="' + sizes + '" width="800" height="800" alt="' + String(p.name).replace(/"/g, '&quot;') + '"' +
+        (opts.eager ? ' fetchpriority="high"' : ' loading="lazy"') + ' decoding="async" draggable="false" />';
     }
     var n = ++uid;
     var L = 'liq' + n, C = 'cap' + n, G = 'gls' + n, S = 'shd' + n;

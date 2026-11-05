@@ -259,7 +259,7 @@ em { font-style: normal; color: var(--gold-text); }
 .footer-grid .logo { justify-content: flex-start; margin-bottom: var(--s-4); }
 .footer-grid .logo img { height: 64px; }
 .footer-brand p { max-width: 320px; }
-.footer-grid h4 { color: var(--text); margin-bottom: var(--s-3); font-weight: 600; }
+.footer-grid .foot-h { color: var(--text); margin-bottom: var(--s-3); font-weight: 600; font-size: var(--fs-sm); letter-spacing: 0; }
 .footer-grid div > a:not(.logo) { display: flex; align-items: center; min-height: 40px; transition: color var(--dur-1); }
 .footer-grid div > a:not(.logo):hover, .footer-brand p a:hover { color: var(--text); }
 .footer-brand p a { display: inline-flex; min-height: 32px; align-items: center; }
@@ -530,6 +530,7 @@ em { font-style: normal; color: var(--gold-text); }
 .specs span { display: block; font-size: var(--fs-xs); color: var(--muted); }
 .specs strong { font-weight: 500; font-size: var(--fs-sm); }
 .pyramid { margin: var(--s-6) 0; }
+.h3 { font-size: var(--fs-xl); letter-spacing: -.02em; line-height: 1.2; }
 .tier { display: grid; grid-template-columns: 110px 1fr; gap: var(--s-4); padding: var(--s-3) 0; border-bottom: 1px solid var(--line); }
 .tier span { font-size: var(--fs-sm); color: var(--muted); }
 .tier p { margin: 0; }
@@ -660,7 +661,7 @@ em { font-style: normal; color: var(--gold-text); }
 .unbox.is-closing .insert { transition-delay: 0ms; transition-duration: var(--dur-2); }
 .insert-card { position: relative; margin-bottom: var(--s-3); padding: var(--s-4) var(--s-5); border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--sh-1); }
 .insert-card::before { content: ''; position: absolute; left: 50%; top: -1px; width: 44px; height: 3px; border-radius: 0 0 3px 3px; background: var(--gold); transform: translateX(-50%); }
-.insert-card h4 { margin: 0 0 var(--s-2); font-size: var(--fs-xs); color: var(--muted); font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
+.insert-card h3 { margin: 0 0 var(--s-2); font-size: var(--fs-xs); color: var(--muted); font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
 .insert-card dl { display: grid; grid-template-columns: auto 1fr; gap: 6px var(--s-4); margin: 0; font-size: var(--fs-sm); }
 .insert-card dt { color: var(--muted); }
 .insert-card dd { margin: 0; }

@@ -215,6 +215,10 @@ def save_image(name, src):
             im = im.convert('RGB')
         im.thumbnail((800, 800))
         im.save(dest, 'WEBP', quality=80, method=6)
+    small = os.path.join(IMG_DIR, 'sm', name)
+    if not os.path.exists(small):  # 400px copy for cards (srcset)
+        os.makedirs(os.path.dirname(small), exist_ok=True)
+        im = Image.open(dest); im.thumbnail((400, 400)); im.save(small, 'WEBP', quality=78, method=6)
     return dest
 
 
@@ -307,9 +311,10 @@ def main():
           '};\n')
     open(OUT, 'w', encoding='utf8').write(js)
     used = {os.path.basename(v['image']) for p in products for v in p['variants']}
-    for f in os.listdir(IMG_DIR):
-        if f not in used:
-            os.remove(os.path.join(IMG_DIR, f))
+    for folder in (IMG_DIR, os.path.join(IMG_DIR, 'sm')):
+        for f in os.listdir(folder):
+            if f.endswith('.webp') and f not in used:
+                os.remove(os.path.join(folder, f))
     print(f'{len(products)} products ({sum(len(p["variants"]) for p in products)} listings) in {len(families)} families -> {OUT}')
 
 

@@ -133,6 +133,8 @@
       $$('[data-cart-count]').forEach(function (el) {
         var c = Math.max(0, Cart.count() - Cart.hold); el.textContent = c; el.classList.toggle('is-empty', c === 0);
       });
+      var shown = Math.max(0, Cart.count() - Cart.hold);
+      $$('[data-open-cart]').forEach(function (b) { b.setAttribute('aria-label', 'Bag, ' + shown + (shown === 1 ? ' item' : ' items')); });
       renderDrawer();
       this.listeners.forEach(function (fn) { fn(); });
     }
@@ -156,7 +158,7 @@
     var br = bag.getBoundingClientRect();
     var el = document.createElement('div');
     el.className = 'fly-box'; el.setAttribute('aria-hidden', 'true');
-    el.innerHTML = '<span class="fb-body"><img src="assets/img/logo.png" alt="" /></span><span class="fb-lid"></span><span class="fb-tape"></span>';
+    el.innerHTML = '<span class="fb-body"><img src="assets/img/logo-sm.webp" alt="" /></span><span class="fb-lid"></span><span class="fb-tape"></span>';
     document.body.appendChild(el);
     var size = 56;
     var x0 = fr.left + fr.width / 2 - size / 2, y0 = fr.top + fr.height / 2 - size / 2;
@@ -227,7 +229,7 @@
       '<div class="header-bar">' +
       '<button class="icon-btn burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>' +
       '<nav class="main-nav" aria-label="Main">' + links + '</nav>' +
-      '<a href="index.html" class="logo" aria-label="Assaf home"><img src="assets/img/logo.png" alt="Assaf" width="60" height="56" /></a>' +
+      '<a href="index.html" class="logo" aria-label="Assaf home"><img src="assets/img/logo-sm.webp" alt="Assaf" width="45" height="42" /></a>' +
       '<div class="header-actions">' +
       '<button class="icon-btn" data-open-search aria-label="Search" aria-keyshortcuts="/">' + ICON.search + '</button>' +
       '<button class="icon-btn theme-btn" data-theme-toggle aria-label="Switch colour theme">' + ICON.sun + ICON.moon + '</button>' +
@@ -275,13 +277,13 @@
     footer.className = 'site-footer';
     footer.innerHTML =
       '<div class="container footer-grid">' +
-      '<div class="footer-brand"><a href="index.html" class="logo"><img src="assets/img/logo.png" alt="Assaf" width="90" height="84" /></a>' +
+      '<div class="footer-brand"><a href="index.html" class="logo"><img src="assets/img/logo-sm.webp" alt="Assaf" width="68" height="64" loading="lazy" /></a>' +
       '<p>Where Gulf identity meets the genius of the world’s greatest perfumers.</p>' +
       '<p class="small"><a href="mailto:support@assaf.ae">support@assaf.ae</a> · <a href="tel:+966920002040">+966 92 000 2040</a></p>' +
       '<div class="socials"><a href="https://instagram.com/assafperfumes" target="_blank" rel="noopener" aria-label="Instagram">' + ICON.ig + '</a><a href="https://twitter.com/assafperfumes" target="_blank" rel="noopener" aria-label="X">' + ICON.x + '</a></div></div>' +
-      '<div><h4>Shop</h4><a href="shop.html">All fragrances</a><a href="shop.html?gender=Men">For him</a><a href="shop.html?gender=Women">For her</a><a href="shop.html?gender=Unisex">Unisex</a></div>' +
-      '<div><h4>Collections</h4>' + ASSAF.FAMILIES.map(function (f) { return '<a href="shop.html?family=' + encodeURIComponent(f) + '">' + f + '</a>'; }).join('') + '</div>' +
-      '<div><h4>House</h4><a href="about.html">Our story</a><a href="contact.html">Contact</a><a href="contact.html#faq">FAQ</a><a href="https://assaf.ae" target="_blank" rel="noopener">assaf.ae</a></div>' +
+      '<div><h2 class="foot-h">Shop</h2><a href="shop.html">All fragrances</a><a href="shop.html?gender=Men">For him</a><a href="shop.html?gender=Women">For her</a><a href="shop.html?gender=Unisex">Unisex</a></div>' +
+      '<div><h2 class="foot-h">Collections</h2>' + ASSAF.FAMILIES.map(function (f) { return '<a href="shop.html?family=' + encodeURIComponent(f) + '">' + f + '</a>'; }).join('') + '</div>' +
+      '<div><h2 class="foot-h">House</h2><a href="about.html">Our story</a><a href="contact.html">Contact</a><a href="contact.html#faq">FAQ</a><a href="https://assaf.ae" target="_blank" rel="noopener">assaf.ae</a></div>' +
       '</div>' +
       '<div class="container footer-bottom"><span>© ' + new Date().getFullYear() + ' Assaf Perfumes. All rights reserved.</span>' +
       '<span class="pay">Visa · Mastercard · Tamara</span></div>';
@@ -315,7 +317,6 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
 
     $('#search input').addEventListener('input', function (e) { renderSearch(e.target.value); });
-    renderSearch('');
 
     var onScroll = function () { header.classList.toggle('scrolled', window.scrollY > 24); };
     window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
@@ -330,6 +331,7 @@
   }
   function openSearch() {
     closeAll(); document.body.classList.add('search-open');
+    var si = $('#search input'); if (si && !$('[data-search-results]').childElementCount) renderSearch(si.value || '');
     setTimeout(function () { $('#search input').focus(); }, 200);
   }
   function closeAll() {
@@ -388,7 +390,7 @@
   function boxed(p, i, href) {
     return '<a href="product.html?id=' + p.id + '" class="boxed" aria-label="' + esc(p.name) + '">' +
       '<span class="bx-photo">' + ASSAF.stage(p, { variant: +i.size }) + '</span>' +
-      '<span class="bx-front"><img src="assets/img/logo.png" alt="" /></span>' + (href === 'qty' ? '<b>' + i.qty + '</b>' : '') + '</a>';
+      '<span class="bx-front"><img src="assets/img/logo-sm.webp" alt="" width="20" height="19" /></span>' + (href === 'qty' ? '<b>' + i.qty + '</b>' : '') + '</a>';
   }
   ASSAF.boxed = boxed;
 
@@ -434,10 +436,10 @@
     opts = opts || {};
     var sizes = p.variants.length > 1 ? p.variants.length + ' sizes' : p.variants[0].label;
     return '<article class="card' + (opts.cls ? ' ' + opts.cls : '') + (p.available ? '' : ' is-soldout') + '">' +
-      '<a class="card-media" href="product.html?id=' + p.id + '" data-unbox="' + p.id + '" draggable="false" aria-label="' + esc(p.name) + ' — open product">' +
+      '<a class="card-media" href="product.html?id=' + p.id + '" data-unbox="' + p.id + '" draggable="false"><span class="sr-only">Unbox ' + esc(p.name) + '</span>' +
       ASSAF.stage(p, { tilt: true }) +
       (p.badge ? '<span class="badge' + (p.available ? '' : ' muted-badge') + '">' + p.badge + '</span>' : '') +
-      '<span class="card-view">Tap to unbox ' + ICON.arrow + '</span></a>' +
+      '<span class="card-view" aria-hidden="true">Tap to unbox ' + ICON.arrow + '</span></a>' +
       '<div class="card-actions">' +
       '<button class="icon-btn heart" data-wish="' + p.id + '" aria-pressed="' + Wish.has(p.id) + '" aria-label="Save to wishlist">' + ICON.heart + '</button>' +
       '<button class="icon-btn qv-btn" data-qv="' + p.id + '" aria-label="Quick view ' + esc(p.name) + '">' + ICON.eye + '</button></div>' +
@@ -564,15 +566,28 @@
     // moving product marquee (tap any bottle to open it)
     var track = $('[data-marquee]');
     var moving = ASSAF.PRODUCTS.filter(function (p) { return p.available && p.family !== 'Gift Sets'; })
-      .sort(function (a, b) { return b.bestseller - a.bestseller; }).slice(0, 16);
+      .sort(function (a, b) { return b.bestseller - a.bestseller; }).slice(0, 10);
     var html = moving.map(function (p) { return ASSAF.card(p, { cls: 'card-marquee' }); }).join('');
     track.innerHTML = html + html;
     ASSAF.marquee(track, 0.6);
 
-    // scroll-driven showcase
-    initShowcase();
+    // below-the-fold sections are built just before they scroll into view
+    whenNear($('#showcase'), initShowcase);
+    whenNear($('[data-families]'), buildFamilies);
+    whenNear($('#bestsellers'), buildBest);
+    initNewsletter();
+  };
 
-    // families
+  function whenNear(el, fn) {
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) { fn(); return; }
+    var io = new IntersectionObserver(function (en) {
+      if (en.some(function (e) { return e.isIntersecting; })) { io.disconnect(); fn(); initReveal(); }
+    }, { rootMargin: '900px 0px' });
+    io.observe(el);
+  }
+
+  function buildFamilies() {
     $('[data-families]').innerHTML = ASSAF.FAMILIES.map(function (f, i) {
       var inF = ASSAF.PRODUCTS.filter(function (x) { return x.family === f; });
       var p = inF.find(function (x) { return x.bestseller && x.available; }) || inF.find(function (x) { return x.available; }) || inF[0];
@@ -581,29 +596,14 @@
         ASSAF.stage(p) +
         '<div class="family-text"><span class="eyebrow">' + count + (f === 'Gift Sets' ? ' sets' : ' fragrances') + '</span><h3>' + f + '</h3><span class="link">Explore ' + ICON.arrow + '</span></div></a>';
     }).join('');
+  }
 
-    // bestsellers carousel
+  function buildBest() {
     var best = ASSAF.PRODUCTS.filter(function (p) { return p.bestseller; });
     if (best.length < 6) best = best.concat(ASSAF.PRODUCTS.filter(function (p) { return !p.bestseller && p.available && p.family !== 'Gift Sets'; }).slice(0, 8 - best.length));
     $('[data-best]').innerHTML = best.map(function (p) { return ASSAF.card(p); }).join('');
     ASSAF.carousel($('#bestsellers'));
-
-    // testimonials
-    var slides = $$('.quote');
-    var dots = $('.quote-dots');
-    if (!slides.length || !dots) { initNewsletter(); return; }
-    var qi = 0;
-    dots.innerHTML = slides.map(function (_, i) { return '<button aria-label="Show review ' + (i + 1) + '"></button>'; }).join('');
-    function showQ(i) {
-      qi = (i + slides.length) % slides.length;
-      slides.forEach(function (s, k) { s.classList.toggle('active', k === qi); });
-      $$('button', dots).forEach(function (d, k) { d.classList.toggle('active', k === qi); });
-    }
-    $$('button', dots).forEach(function (d, k) { d.addEventListener('click', function () { showQ(k); restart(); }); });
-    var qt; function restart() { clearInterval(qt); qt = setInterval(function () { showQ(qi + 1); }, 5000); }
-    showQ(0); restart();
-    initNewsletter();
-  };
+  }
 
   function initNewsletter() {
     var nf = $('#newsletter');
@@ -632,7 +632,7 @@
         (p.available ? '<button class="btn btn-ghost-light" data-add="' + p.id + '" data-size="' + firstAvail(p) + '">Add to bag</button>' : '') + '</div></div>';
     }).join('');
     nav.innerHTML = items.map(function (p, i) {
-      return '<button data-i="' + i + '" style="--tint:' + p.liquid[0] + '"><span>' + esc(p.name) + '</span></button>';
+      return '<button data-i="' + i + '" style="--tint:' + p.liquid[0] + '" aria-label="Show ' + esc(p.name) + '"><span aria-hidden="true">' + esc(p.name) + '</span></button>';
     }).join('');
     sec.style.setProperty('--steps', items.length);
 
@@ -754,7 +754,7 @@
       '<ul class="perks"><li>Free express shipping over ' + money(FREE_SHIP) + '</li><li>Gift-ready Assaf packaging</li><li>Questions? <a href="mailto:support@assaf.ae">support@assaf.ae</a></li></ul>' +
       '<div class="specs"><div><span>Collection</span><strong>' + p.family + '</strong></div><div><span>For</span><strong>' + p.gender + '</strong></div>' +
       '<div><span>Sizes</span><strong>' + p.variants.map(function (v) { return esc(v.label.split(' · ')[0]); }).join(', ') + '</strong></div><div><span>Status</span><strong>' + (p.available ? 'In stock' : 'Sold out') + '</strong></div></div>' +
-      (notes ? '<div class="pyramid"><h3>Fragrance notes</h3>' +
+      (notes ? '<div class="pyramid"><h2 class="h3">Fragrance notes</h2>' +
       [['Top', 'top'], ['Heart', 'heart'], ['Base', 'base']].filter(function (t) { return notes[t[1]].length; }).map(function (t) {
         return '<div class="tier"><span>' + t[0] + ' notes</span><p>' + notes[t[1]].map(esc).join(' · ') + '</p></div>';
       }).join('') + '</div>' : '') +
@@ -922,7 +922,7 @@
     Wish.render();
     if (Pages[PAGE]) Pages[PAGE]();
     initReveal();
-    var pre = $('.preloader');
+    var pre = $('.preloader'); // (removed from the pages for faster first paint; kept for compatibility)
     if (pre) {
       var hide = function () { pre.classList.add('done'); setTimeout(function () { pre.remove(); }, 900); };
       if (document.readyState === 'complete') setTimeout(hide, 500); else window.addEventListener('load', function () { setTimeout(hide, 500); });
