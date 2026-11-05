@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shop All Fragrances — Assaf Parfums</title>
+  <meta name="description" content="Shop the full Assaf collection of luxury Arabian eaux de parfum: oud, oriental, floral, musk and fresh." />
+  <meta name="theme-color" content="#0e0b08" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0b08'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' fill='%23e7c987' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body data-page="shop" data-solid-header>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">The Collection</span>
+      <h1 data-shop-title>All Fragrances</h1>
+      <p>Twelve eaux de parfum, each composed around one rare ingredient.</p>
+    </section>
+    <div class="toolbar">
+      <div class="container toolbar-inner">
+        <div class="filter-group"><span>Family</span><div class="chips" data-filter-family></div></div>
+        <div class="filter-group"><span>For</span><div class="chips" data-filter-gender></div></div>
+        <div class="tools-right">
+          <input id="shop-search" class="input-pill" type="search" placeholder="Search notes…" aria-label="Search fragrances" />
+          <select id="sort" class="input-pill" aria-label="Sort">
+            <option value="featured">Featured</option>
+            <option value="low">Price: low to high</option>
+            <option value="high">Price: high to low</option>
+            <option value="name">Name A–Z</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <section class="container" style="padding-bottom:120px">
+      <div class="shop-meta"><span class="muted" data-count></span></div>
+      <div class="grid" data-grid></div>
+    </section>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/bottle.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

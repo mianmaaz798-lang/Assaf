@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout — Assaf Parfums</title>
+  <meta name="description" content="Secure checkout for Assaf Parfums." />
+  <meta name="theme-color" content="#0e0b08" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0b08'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' fill='%23e7c987' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body data-page="checkout" data-solid-header>
+  <main>
+    <section class="page-hero"><span class="eyebrow">Secure checkout</span><h1>Checkout</h1></section>
+    <section class="container section" style="padding-top:40px" data-checkout>
+      <div class="checkout-layout">
+        <form id="checkout-form" novalidate>
+          <div class="form-section">
+            <h3><i>1</i> Contact</h3>
+            <div class="fields">
+              <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required /><span class="err">Enter a valid email</span></div>
+              <div class="field"><label for="phone">Mobile</label><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+966 5x xxx xxxx" pattern="[+0-9 ]{9,16}" required /><span class="err">Enter a valid mobile number</span></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <h3><i>2</i> Delivery address</h3>
+            <div class="fields">
+              <div class="field"><label for="firstName">First name</label><input id="firstName" name="firstName" autocomplete="given-name" required /><span class="err">Required</span></div>
+              <div class="field"><label for="lastName">Last name</label><input id="lastName" name="lastName" autocomplete="family-name" required /><span class="err">Required</span></div>
+              <div class="field full"><label for="address">Street address</label><input id="address" name="address" autocomplete="street-address" required /><span class="err">Required</span></div>
+              <div class="field"><label for="city">City</label>
+                <select id="city" name="city" required>
+                  <option value="">Select city</option>
+                  <option>Riyadh</option><option>Jeddah</option><option>Dammam</option><option>Mecca</option><option>Medina</option>
+                  <option>Khobar</option><option>Abha</option><option>Taif</option><option>Tabuk</option><option>Dubai</option><option>Kuwait City</option><option>Doha</option><option>Manama</option><option>Muscat</option>
+                </select><span class="err">Choose a city</span></div>
+              <div class="field"><label for="zip">Postal code</label><input id="zip" name="zip" autocomplete="postal-code" inputmode="numeric" /></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <h3><i>3</i> Delivery method</h3>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="shipping" value="standard" checked /><span>Standard delivery<small>2–4 business days · free over SAR 400</small></span><strong>SAR 25</strong></label>
+              <label class="choice"><input type="radio" name="shipping" value="express" /><span>Express delivery<small>1–2 business days</small></span><strong>SAR 45</strong></label>
+            </div>
+          </div>
+          <div class="form-section">
+            <h3><i>4</i> Payment</h3>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="payment" value="card" checked /><span>Credit / debit card<small>Mada, Visa, Mastercard</small></span></label>
+              <label class="choice"><input type="radio" name="payment" value="applepay" /><span>Apple Pay</span></label>
+              <label class="choice"><input type="radio" name="payment" value="cod" /><span>Cash on delivery<small>Pay when your order arrives</small></span></label>
+            </div>
+            <div class="fields" data-card-fields style="margin-top:14px">
+              <div class="field full"><label for="cardNumber">Card number</label><input id="cardNumber" name="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" pattern="[0-9 ]{19}" required /><span class="err">Enter a 16-digit card number</span></div>
+              <div class="field"><label for="cardExp">Expiry</label><input id="cardExp" name="cardExp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" pattern="(0[1-9]|1[0-2])/[0-9]{2}" required /><span class="err">MM/YY</span></div>
+              <div class="field"><label for="cardCvc">CVC</label><input id="cardCvc" name="cardCvc" inputmode="numeric" autocomplete="cc-csc" placeholder="123" pattern="[0-9]{3,4}" required /><span class="err">3–4 digits</span></div>
+            </div>
+          </div>
+          <label class="choice" style="margin-bottom:24px"><input type="checkbox" name="gift" /><span>Add complimentary gift wrapping<small>Includes a handwritten note card</small></span></label>
+          <button class="btn btn-gold btn-block" type="submit">Place order</button>
+          <p class="secure">🔒 Payments are encrypted and processed securely</p>
+        </form>
+        <div class="checkout-side" data-checkout-summary></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/bottle.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
