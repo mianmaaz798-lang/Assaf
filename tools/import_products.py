@@ -199,8 +199,13 @@ def image_url(src):
     return src + ('&' if '?' in src else '?') + 'width=800'
 
 
-def save_image(handle, src):
-    dest = os.path.join(IMG_DIR, handle + '.webp')
+def file_name(p):
+    safe = re.sub(r'[^a-z0-9-]+', '', p['handle'].lower())
+    return (safe if safe.strip('-') else 'product-' + str(p['id'])) + '.webp'
+
+
+def save_image(name, src):
+    dest = os.path.join(IMG_DIR, name)
     if not os.path.exists(dest):
         raw, _ = fetch(image_url(src))
         im = Image.open(io.BytesIO(raw))
@@ -233,7 +238,7 @@ def main():
 
     with ThreadPoolExecutor(8) as ex:
         paths = dict(zip([p['handle'] for p in keep],
-                         ex.map(lambda p: save_image(p['handle'], p['images'][0]['src']), keep)))
+                         ex.map(lambda p: save_image(file_name(p), p['images'][0]['src']), keep)))
 
     merged, order = {}, []
     for p in keep:
@@ -246,7 +251,7 @@ def main():
             'price': float(v['price']),
             'compare': float(v['compare_at_price']) if v.get('compare_at_price') and float(v['compare_at_price']) > float(v['price']) else None,
             'available': bool(v['available']),
-            'image': 'assets/img/products/' + p['handle'] + '.webp',
+            'image': 'assets/img/products/' + file_name(p),
         } for v in p['variants']]
         if key in merged:
             m = merged[key]

@@ -1253,7 +1253,7 @@ ASSAF.PRODUCTS = [
     "price": 197.8,
     "compare": 499.0,
     "available": true,
-    "image": "assets/img/products/مجموعة-حصرية.webp"
+    "image": "assets/img/products/product-11200658636967.webp"
    }
   ],
   "liquid": [
@@ -1265,7 +1265,7 @@ ASSAF.PRODUCTS = [
   "gender": "Women",
   "price": 197.8,
   "compare": 499.0,
-  "image": "assets/img/products/مجموعة-حصرية.webp",
+  "image": "assets/img/products/product-11200658636967.webp",
   "available": true,
   "bestseller": false,
   "badge": "-60%"
