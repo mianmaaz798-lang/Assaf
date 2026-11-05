@@ -8,12 +8,14 @@
 
   /* ---------------------------------------------------------------- helpers */
   function money(v) {
-    return ASSAF.CURRENCY + ' ' + Math.round(v).toLocaleString('en-US');
+    var n = Math.round(v * 100) / 100;
+    return ASSAF.CURRENCY + ' ' + n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
   }
-  function sizeInfo(id) {
-    return ASSAF.SIZES.find(function (s) { return s.id === id; }) || ASSAF.SIZES[0];
+  function variant(p, idx) { return p.variants[+idx] || p.variants[0]; }
+  function priceFor(p, idx) { return variant(p, idx).price; }
+  function priceHTML(price, compare) {
+    return '<span class="now">' + money(price) + '</span>' + (compare ? ' <s class="was">' + money(compare) + '</s>' : '');
   }
-  function priceFor(p, sizeId) { return p.price * sizeInfo(sizeId).mult; }
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -29,7 +31,7 @@
 
   /* ---------------------------------------------------------------- cart */
   var Cart = {
-    items: store('assaf_cart') || [],
+    items: (store('assaf_cart') || []).filter(function (i) { var p = ASSAF.getProduct(i.id); return p && p.variants[+i.size]; }),
     save: function () { store('assaf_cart', this.items); this.render(); },
     count: function () { return this.items.reduce(function (n, i) { return n + i.qty; }, 0); },
     subtotal: function () {
@@ -38,7 +40,11 @@
       }, 0);
     },
     add: function (id, size, qty) {
-      size = size || ASSAF.SIZES[0].id; qty = qty || 1;
+      size = String(size || 0); qty = qty || 1;
+      var prod = ASSAF.getProduct(id);
+      if (!prod) return;
+      id = prod.id;
+      if (!variant(prod, size).available) { toast('Sorry — this size is sold out'); return; }
       var line = this.items.find(function (i) { return i.id === id && i.size === size; });
       if (line) line.qty = Math.min(line.qty + qty, 20); else this.items.push({ id: id, size: size, qty: qty });
       this.save();
@@ -93,8 +99,8 @@
 
   function buildLayout() {
     var nav = [
-      ['index.html', 'Home', 'home'], ['shop.html', 'Shop', 'shop'],
-      ['shop.html?family=Oud', 'Oud', ''], ['about.html', 'Our Story', 'about'], ['contact.html', 'Contact', 'contact']
+      ['shop.html', 'Shop all', 'shop'], ['shop.html?gender=Women', 'Women', ''], ['shop.html?gender=Men', 'Men', ''],
+      ['shop.html?family=Gift%20Sets', 'Gift Sets', ''], ['about.html', 'Our Story', 'about'], ['contact.html', 'Contact', 'contact']
     ];
     var links = nav.map(function (n) {
       return '<a href="' + n[0] + '"' + (n[2] && n[2] === PAGE ? ' aria-current="page"' : '') + '>' + n[1] + '</a>';
@@ -104,15 +110,15 @@
     header.className = 'site-header' + (document.body.hasAttribute('data-solid-header') ? ' is-solid' : '');
     header.innerHTML =
       '<div class="announce"><div class="announce-track">' +
-      '<span>Complimentary delivery across the Kingdom on orders over SAR 400</span><span>✦</span>' +
-      '<span>Free sample with every order</span><span>✦</span><span>Gift wrapping available at checkout</span><span>✦</span>' +
-      '<span>Complimentary delivery across the Kingdom on orders over SAR 400</span><span>✦</span>' +
-      '<span>Free sample with every order</span><span>✦</span><span>Gift wrapping available at checkout</span><span>✦</span>' +
+      '<span>Free express shipping on orders over ' + money(FREE_SHIP) + '</span><span>✦</span>' +
+      '<span>Buy 2 Get 1 Free on selected perfumes</span><span>✦</span><span>Gift sets for every occasion</span><span>✦</span>' +
+      '<span>Free express shipping on orders over ' + money(FREE_SHIP) + '</span><span>✦</span>' +
+      '<span>Buy 2 Get 1 Free on selected perfumes</span><span>✦</span><span>Gift sets for every occasion</span><span>✦</span>' +
       '</div></div>' +
       '<div class="header-bar container">' +
       '<button class="icon-btn burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>' +
       '<nav class="main-nav" aria-label="Main">' + links + '</nav>' +
-      '<a href="index.html" class="logo" aria-label="Assaf home">ASSAF<small>PARFUMS</small></a>' +
+      '<a href="index.html" class="logo" aria-label="Assaf home"><img src="assets/img/logo.png" alt="Assaf" width="60" height="56" /></a>' +
       '<div class="header-actions">' +
       '<button class="icon-btn" data-open-search aria-label="Search">' + ICON.search + '</button>' +
       '<button class="icon-btn cart-btn" data-open-cart aria-label="Open bag">' + ICON.bag + '<span class="cart-count is-empty" data-cart-count>0</span></button>' +
@@ -121,7 +127,7 @@
 
     var mobile = document.createElement('div');
     mobile.className = 'mobile-nav'; mobile.id = 'mobile-nav';
-    mobile.innerHTML = '<nav aria-label="Mobile">' + links + '</nav><p class="mobile-nav-foot">Crafted in the Kingdom of Saudi Arabia</p>';
+    mobile.innerHTML = '<nav aria-label="Mobile">' + links + '</nav><p class="mobile-nav-foot">support@assaf.ae · @assafperfumes</p>';
     document.body.appendChild(mobile);
 
     var drawer = document.createElement('aside');
@@ -130,8 +136,8 @@
       '<div class="drawer-head"><h3>Your Bag <span data-cart-count>0</span></h3><button class="icon-btn" data-close-cart aria-label="Close bag">' + ICON.close + '</button></div>' +
       '<div class="ship-meter"><p data-ship-msg></p><div class="meter"><span data-ship-bar></span></div></div>' +
       '<div class="drawer-body" data-drawer-items></div>' +
-      '<div class="drawer-foot"><div class="row"><span>Subtotal</span><strong data-drawer-subtotal>SAR 0</strong></div>' +
-      '<p class="muted small">Taxes included. Shipping calculated at checkout.</p>' +
+      '<div class="drawer-foot"><div class="row"><span>Subtotal</span><strong data-drawer-subtotal>AED 0</strong></div>' +
+      '<p class="muted small">Shipping calculated at checkout.</p>' +
       '<a href="checkout.html" class="btn btn-gold btn-block" data-checkout-link>Checkout</a>' +
       '<a href="cart.html" class="btn btn-ghost btn-block">View bag</a></div>';
     document.body.appendChild(drawer);
@@ -150,15 +156,16 @@
     footer.className = 'site-footer';
     footer.innerHTML =
       '<div class="container footer-grid">' +
-      '<div class="footer-brand"><a href="index.html" class="logo">ASSAF<small>PARFUMS</small></a>' +
-      '<p>Rare ingredients, Arabian heritage and modern perfumery — composed to be remembered.</p>' +
-      '<div class="socials"><a href="#" aria-label="Instagram">' + ICON.ig + '</a><a href="#" aria-label="TikTok">' + ICON.tt + '</a><a href="#" aria-label="X">' + ICON.x + '</a><a href="#" aria-label="WhatsApp">' + ICON.wa + '</a></div></div>' +
+      '<div class="footer-brand"><a href="index.html" class="logo"><img src="assets/img/logo.png" alt="Assaf" width="90" height="84" /></a>' +
+      '<p>Where Gulf identity meets the genius of the world’s greatest perfumers.</p>' +
+      '<p class="small"><a href="mailto:support@assaf.ae">support@assaf.ae</a> · <a href="tel:+966920002040">+966 92 000 2040</a></p>' +
+      '<div class="socials"><a href="https://instagram.com/assafperfumes" target="_blank" rel="noopener" aria-label="Instagram">' + ICON.ig + '</a><a href="https://twitter.com/assafperfumes" target="_blank" rel="noopener" aria-label="X">' + ICON.x + '</a></div></div>' +
       '<div><h4>Shop</h4><a href="shop.html">All fragrances</a><a href="shop.html?gender=Men">For him</a><a href="shop.html?gender=Women">For her</a><a href="shop.html?gender=Unisex">Unisex</a></div>' +
-      '<div><h4>Families</h4>' + ASSAF.FAMILIES.map(function (f) { return '<a href="shop.html?family=' + f + '">' + f + '</a>'; }).join('') + '</div>' +
-      '<div><h4>House</h4><a href="about.html">Our story</a><a href="contact.html">Contact</a><a href="contact.html#faq">Shipping &amp; returns</a><a href="contact.html#faq">FAQ</a></div>' +
+      '<div><h4>Collections</h4>' + ASSAF.FAMILIES.map(function (f) { return '<a href="shop.html?family=' + encodeURIComponent(f) + '">' + f + '</a>'; }).join('') + '</div>' +
+      '<div><h4>House</h4><a href="about.html">Our story</a><a href="contact.html">Contact</a><a href="contact.html#faq">FAQ</a><a href="https://assaf.ae" target="_blank" rel="noopener">assaf.ae</a></div>' +
       '</div>' +
-      '<div class="container footer-bottom"><span>© ' + new Date().getFullYear() + ' Assaf Parfums. All rights reserved.</span>' +
-      '<span class="pay">Mada · Visa · Mastercard · Apple Pay · Cash on delivery</span></div>';
+      '<div class="container footer-bottom"><span>© ' + new Date().getFullYear() + ' Assaf Perfumes. All rights reserved.</span>' +
+      '<span class="pay">Visa · Mastercard · Tamara</span></div>';
     document.body.appendChild(footer);
 
     // events
@@ -192,22 +199,26 @@
   }
   ASSAF.openCart = openCart;
 
+  function haystack(p) {
+    var n = p.notes || { top: [], heart: [], base: [] };
+    return [p.name, p.family, p.gender, p.tagline].concat(n.top, n.heart, n.base).join(' ').toLowerCase();
+  }
+  ASSAF.haystack = haystack;
+
   function renderSearch(q) {
     var box = $('[data-search-results]'); if (!box) return;
     q = q.trim().toLowerCase();
     var list = ASSAF.PRODUCTS.filter(function (p) {
       if (!q) return true;
-      var hay = [p.name, p.family, p.gender, p.tagline].concat(p.notes.top, p.notes.heart, p.notes.base).join(' ').toLowerCase();
-      return hay.indexOf(q) > -1;
+      return haystack(p).indexOf(q) > -1;
     });
-    box.innerHTML = list.length ? list.slice(0, 8).map(function (p) {
+    box.innerHTML = list.length ? list.slice(0, 12).map(function (p) {
       return '<a class="search-item" href="product.html?id=' + p.id + '"><div class="search-thumb" style="--tint:' + p.liquid[0] + '">' + ASSAF.bottle(p, { shadow: false }) + '</div>' +
-        '<div><strong>' + esc(p.name) + '</strong><span>' + p.family + ' · ' + money(p.price) + '</span></div></a>';
-    }).join('') : '<p class="muted">No fragrance matches “' + esc(q) + '”. Try “oud”, “rose” or “musk”.</p>';
+        '<div><strong>' + esc(p.name) + '</strong><span>' + p.family + ' · ' + money(p.price) + (p.available ? '' : ' · Sold out') + '</span></div></a>';
+    }).join('') : '<p class="muted">No fragrance matches “' + esc(q) + '”. Try “Arrogate”, “Frankel” or “vanilla”.</p>';
   }
 
-  var FREE_SHIP = 400;
-  ASSAF.FREE_SHIP = FREE_SHIP;
+  var FREE_SHIP = ASSAF.FREE_SHIP || 275;
   function renderDrawer() {
     var box = $('[data-drawer-items]'); if (!box) return;
     var sub = Cart.subtotal();
@@ -217,14 +228,14 @@
       box.innerHTML = Cart.items.map(function (i, idx) {
         var p = ASSAF.getProduct(i.id); if (!p) return '';
         return '<div class="line"><a href="product.html?id=' + p.id + '" class="line-thumb" style="--tint:' + p.liquid[0] + '">' + ASSAF.bottle(p, { shadow: false }) + '</a>' +
-          '<div class="line-info"><a href="product.html?id=' + p.id + '"><strong>' + esc(p.name) + '</strong></a><span class="muted small">' + sizeInfo(i.size).label + ' · Eau de Parfum</span>' +
+          '<div class="line-info"><a href="product.html?id=' + p.id + '"><strong>' + esc(p.name) + '</strong></a><span class="muted small">' + variant(p, i.size).label + '</span>' +
           '<div class="qty" data-idx="' + idx + '"><button data-q="-1" aria-label="Decrease">−</button><span>' + i.qty + '</span><button data-q="1" aria-label="Increase">+</button></div></div>' +
           '<div class="line-price">' + money(priceFor(p, i.size) * i.qty) + '<button class="link-btn" data-remove="' + idx + '">Remove</button></div></div>';
       }).join('');
     }
     $('[data-drawer-subtotal]').textContent = money(sub);
     var left = FREE_SHIP - sub;
-    $('[data-ship-msg]').innerHTML = left > 0 ? 'You are <strong>' + money(left) + '</strong> away from free delivery' : 'You have unlocked <strong>free delivery</strong> ✦';
+    $('[data-ship-msg]').innerHTML = left > 0 ? 'You are <strong>' + money(left) + '</strong> away from free express shipping' : 'You have unlocked <strong>free express shipping</strong> ✦';
     $('[data-ship-bar]').style.width = Math.min(100, (sub / FREE_SHIP) * 100) + '%';
     $('[data-checkout-link]').classList.toggle('is-disabled', !Cart.items.length);
   }
@@ -244,17 +255,20 @@
   });
 
   /* ---------------------------------------------------------------- product card */
+  function firstAvail(p) { var i = p.variants.findIndex(function (v) { return v.available; }); return i < 0 ? 0 : i; }
   ASSAF.card = function (p, opts) {
     opts = opts || {};
-    return '<article class="card' + (opts.cls ? ' ' + opts.cls : '') + '">' +
+    var sizes = p.variants.length > 1 ? p.variants.length + ' sizes' : p.variants[0].label;
+    return '<article class="card' + (opts.cls ? ' ' + opts.cls : '') + (p.available ? '' : ' is-soldout') + '">' +
       '<a class="card-media" href="product.html?id=' + p.id + '" style="--tint:' + p.liquid[0] + ';--tint2:' + p.liquid[1] + '" draggable="false">' +
-      (p.badge ? '<span class="badge">' + p.badge + '</span>' : '') +
+      (p.badge ? '<span class="badge' + (p.available ? '' : ' muted-badge') + '">' + p.badge + '</span>' : '') +
       '<div class="card-bottle">' + ASSAF.bottle(p) + '</div>' +
       '<span class="card-view">View fragrance ' + ICON.arrow + '</span></a>' +
       '<div class="card-body"><div><span class="eyebrow">' + p.family + ' · ' + p.gender + '</span>' +
       '<h3><a href="product.html?id=' + p.id + '" draggable="false">' + esc(p.name) + '</a></h3>' +
-      '<span class="price">' + money(p.price) + '</span></div>' +
-      '<button class="add-btn" data-add="' + p.id + '" aria-label="Add ' + esc(p.name) + ' to bag">+</button></div></article>';
+      '<span class="price">' + priceHTML(p.price, p.compare) + '</span><span class="sizes-note">' + esc(sizes) + '</span></div>' +
+      (p.available ? '<button class="add-btn" data-add="' + p.id + '" data-size="' + firstAvail(p) + '" aria-label="Add ' + esc(p.name) + ' to bag">+</button>'
+        : '<span class="soldout-tag">Sold out</span>') + '</div></article>';
   };
 
   /* ---------------------------------------------------------------- reveal on scroll */
@@ -334,8 +348,17 @@
 
   Pages.home = function () {
     // hero bottle
-    var hero = ASSAF.getProduct('oud-royale');
-    $('[data-hero-bottle]').innerHTML = ASSAF.bottle(hero);
+    var hero = ASSAF.getProduct('arrogate-pink-200ml') || ASSAF.PRODUCTS[0];
+    $('[data-hero-bottle]').innerHTML = ASSAF.bottle(hero, { eager: true });
+    $$('[data-hero-link]').forEach(function (a) { a.href = 'product.html?id=' + hero.id; });
+    $$('[data-hero-name]').forEach(function (el) { el.textContent = hero.name; });
+    $$('[data-hero-notes]').forEach(function (el) {
+      el.textContent = hero.notes ? [hero.notes.top[0], hero.notes.heart[0], hero.notes.base[0]].filter(Boolean).join(' · ') : hero.tagline;
+    });
+    $$('[data-hero-price]').forEach(function (el) { el.textContent = money(hero.price); });
+    $$('[data-count-products]').forEach(function (el) { el.textContent = ASSAF.PRODUCTS.filter(function (p) { return p.family !== 'Gift Sets'; }).length; });
+    $$('[data-count-families]').forEach(function (el) { el.textContent = ASSAF.FAMILIES.length; });
+    $$('[data-free-ship]').forEach(function (el) { el.textContent = money(FREE_SHIP); });
     // parallax on hero
     var heroEl = $('.hero');
     var heroB = $('.hero-bottle');
@@ -348,7 +371,9 @@
 
     // moving product marquee (tap any bottle to open it)
     var track = $('[data-marquee]');
-    var html = ASSAF.PRODUCTS.map(function (p) { return ASSAF.card(p, { cls: 'card-marquee' }); }).join('');
+    var moving = ASSAF.PRODUCTS.filter(function (p) { return p.available && p.family !== 'Gift Sets'; })
+      .sort(function (a, b) { return b.bestseller - a.bestseller; }).slice(0, 16);
+    var html = moving.map(function (p) { return ASSAF.card(p, { cls: 'card-marquee' }); }).join('');
     track.innerHTML = html + html;
     ASSAF.marquee(track, 0.6);
 
@@ -357,21 +382,24 @@
 
     // families
     $('[data-families]').innerHTML = ASSAF.FAMILIES.map(function (f, i) {
-      var p = ASSAF.PRODUCTS.find(function (x) { return x.family === f; });
-      var count = ASSAF.PRODUCTS.filter(function (x) { return x.family === f; }).length;
-      return '<a class="family reveal" style="--tint:' + p.liquid[0] + ';--tint2:' + p.liquid[1] + ';--d:' + i * 80 + 'ms" href="shop.html?family=' + f + '">' +
+      var inF = ASSAF.PRODUCTS.filter(function (x) { return x.family === f; });
+      var p = inF.find(function (x) { return x.bestseller && x.available; }) || inF.find(function (x) { return x.available; }) || inF[0];
+      var count = inF.length;
+      return '<a class="family reveal" style="--tint:' + p.liquid[0] + ';--tint2:' + p.liquid[1] + ';--d:' + i * 80 + 'ms" href="shop.html?family=' + encodeURIComponent(f) + '">' +
         '<div class="family-bottle">' + ASSAF.bottle(p, { shadow: false }) + '</div>' +
-        '<div class="family-text"><span class="eyebrow">' + count + ' fragrances</span><h3>' + f + '</h3><span class="link">Explore ' + ICON.arrow + '</span></div></a>';
+        '<div class="family-text"><span class="eyebrow">' + count + (f === 'Gift Sets' ? ' sets' : ' fragrances') + '</span><h3>' + f + '</h3><span class="link">Explore ' + ICON.arrow + '</span></div></a>';
     }).join('');
 
     // bestsellers carousel
-    var best = ASSAF.PRODUCTS.filter(function (p) { return p.badge === 'Bestseller' || p.intensity >= 4; });
+    var best = ASSAF.PRODUCTS.filter(function (p) { return p.bestseller; });
+    if (best.length < 6) best = best.concat(ASSAF.PRODUCTS.filter(function (p) { return !p.bestseller && p.available && p.family !== 'Gift Sets'; }).slice(0, 8 - best.length));
     $('[data-best]').innerHTML = best.map(function (p) { return ASSAF.card(p); }).join('');
     ASSAF.carousel($('#bestsellers'));
 
     // testimonials
     var slides = $$('.quote');
     var dots = $('.quote-dots');
+    if (!slides.length || !dots) { initNewsletter(); return; }
     var qi = 0;
     dots.innerHTML = slides.map(function (_, i) { return '<button aria-label="Show review ' + (i + 1) + '"></button>'; }).join('');
     function showQ(i) {
@@ -382,31 +410,34 @@
     $$('button', dots).forEach(function (d, k) { d.addEventListener('click', function () { showQ(k); restart(); }); });
     var qt; function restart() { clearInterval(qt); qt = setInterval(function () { showQ(qi + 1); }, 5000); }
     showQ(0); restart();
+    initNewsletter();
+  };
 
-    // newsletter
+  function initNewsletter() {
     var nf = $('#newsletter');
+    if (!nf) return;
     nf.addEventListener('submit', function (e) {
       e.preventDefault();
       var em = nf.email.value.trim();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { toast('Please enter a valid email'); return; }
-      nf.innerHTML = '<p class="thanks">Welcome to the House of Assaf. Your 10% code: <strong>ASSAF10</strong></p>';
+      nf.innerHTML = '<p class="thanks">Thank you — you’re on the list for new launches and offers.</p>';
     });
-  };
+  }
 
   function initShowcase() {
     var sec = $('#showcase'); if (!sec) return;
-    var ids = ['oud-royale', 'rose-de-taif', 'midnight-bakhoor', 'citrus-majlis'];
-    var items = ids.map(ASSAF.getProduct);
+    var ids = ['arrogate-pink-200ml', 'attacks', 'edp-frankel-blue-elixir-200ml', 'promise'];
+    var items = ids.map(ASSAF.getProduct).filter(Boolean);
     var stage = $('[data-show-stage]'), txt = $('[data-show-text]'), nav = $('[data-show-nav]');
     stage.innerHTML = items.map(function (p, i) {
-      return '<a href="product.html?id=' + p.id + '" class="show-bottle" data-i="' + i + '" aria-label="View ' + esc(p.name) + '">' + ASSAF.bottle(p) + '</a>';
+      return '<a href="product.html?id=' + p.id + '" class="show-bottle" data-i="' + i + '" aria-label="View ' + esc(p.name) + '"><span class="plate">' + ASSAF.bottle(p) + '</span></a>';
     }).join('');
     txt.innerHTML = items.map(function (p, i) {
       return '<div class="show-copy" data-i="' + i + '"><span class="eyebrow">0' + (i + 1) + ' / 0' + items.length + ' · ' + p.family + '</span>' +
-        '<h2>' + esc(p.name) + '</h2><p class="lead">' + esc(p.tagline) + '</p><p>' + esc(p.description) + '</p>' +
-        '<ul class="note-chips">' + p.notes.top.concat(p.notes.heart.slice(0, 1), p.notes.base.slice(0, 1)).map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>' +
+        '<h2>' + esc(p.name) + '</h2><p class="lead">' + esc(p.tagline) + '</p><p' + (p.rtl ? ' dir="rtl" lang="ar"' : '') + '>' + esc(p.description.length > 230 ? p.description.slice(0, 230).replace(/\s\S*$/, '') + '…' : p.description) + '</p>' +
+        (p.notes ? '<ul class="note-chips">' + p.notes.top.slice(0, 3).concat(p.notes.heart.slice(0, 1), p.notes.base.slice(0, 1)).map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' : '<div style="height:24px"></div>') +
         '<div class="show-actions"><a class="btn btn-gold" href="product.html?id=' + p.id + '">Discover · ' + money(p.price) + '</a>' +
-        '<button class="btn btn-ghost-light" data-add="' + p.id + '">Add to bag</button></div></div>';
+        (p.available ? '<button class="btn btn-ghost-light" data-add="' + p.id + '" data-size="' + firstAvail(p) + '">Add to bag</button>' : '') + '</div></div>';
     }).join('');
     nav.innerHTML = items.map(function (p, i) {
       return '<button data-i="' + i + '" style="--tint:' + p.liquid[0] + '"><span>' + esc(p.name) + '</span></button>';
@@ -448,6 +479,7 @@
       sort: 'featured', q: params.get('q') || ''
     };
     var famBox = $('[data-filter-family]'), genBox = $('[data-filter-gender]');
+    if (state.family !== 'All' && ASSAF.FAMILIES.indexOf(state.family) < 0) state.family = 'All';
     famBox.innerHTML = ['All'].concat(ASSAF.FAMILIES).map(function (f) { return '<button data-v="' + f + '">' + f + '</button>'; }).join('');
     genBox.innerHTML = ['All', 'Men', 'Women', 'Unisex'].map(function (f) { return '<button data-v="' + f + '">' + f + '</button>'; }).join('');
     var grid = $('[data-grid]'), countEl = $('[data-count]'), sortSel = $('#sort'), qIn = $('#shop-search');
@@ -460,17 +492,16 @@
       var list = ASSAF.PRODUCTS.filter(function (p) {
         if (state.family !== 'All' && p.family !== state.family) return false;
         if (state.gender !== 'All' && p.gender !== state.gender) return false;
-        if (q) {
-          var hay = [p.name, p.family, p.tagline].concat(p.notes.top, p.notes.heart, p.notes.base).join(' ').toLowerCase();
-          if (hay.indexOf(q) < 0) return false;
-        }
+        if (q && ASSAF.haystack(p).indexOf(q) < 0) return false;
         return true;
       });
+      if (state.sort === 'featured') list.sort(function (a, b) { return (b.available - a.available) || (b.bestseller - a.bestseller); });
+      if (state.sort === 'sale') list.sort(function (a, b) { return (b.available - a.available) || ((b.compare ? 1 - b.price / b.compare : 0) - (a.compare ? 1 - a.price / a.compare : 0)); });
       if (state.sort === 'low') list.sort(function (a, b) { return a.price - b.price; });
       if (state.sort === 'high') list.sort(function (a, b) { return b.price - a.price; });
       if (state.sort === 'name') list.sort(function (a, b) { return a.name.localeCompare(b.name); });
       countEl.textContent = list.length + (list.length === 1 ? ' fragrance' : ' fragrances');
-      $('[data-shop-title]').textContent = state.family !== 'All' ? state.family + ' Collection' : state.gender !== 'All' ? 'For ' + (state.gender === 'Men' ? 'Him' : state.gender === 'Women' ? 'Her' : 'Everyone') : 'All Fragrances';
+      $('[data-shop-title]').textContent = state.family === 'Gift Sets' ? 'Gift Sets' : state.family !== 'All' ? state.family + ' Collection' : state.gender !== 'All' ? 'For ' + (state.gender === 'Men' ? 'Him' : state.gender === 'Women' ? 'Her' : 'Everyone') : 'All Fragrances';
       grid.innerHTML = list.length ? list.map(function (p, i) {
         return ASSAF.card(p, { cls: 'reveal' }).replace('class="card reveal"', 'class="card reveal" style="--d:' + (i % 4) * 70 + 'ms"');
       }).join('') : '<div class="empty-state"><p>No fragrances match these filters.</p><button class="btn btn-ghost" data-reset>Reset filters</button></div>';
@@ -494,68 +525,82 @@
   Pages.product = function () {
     var id = new URLSearchParams(location.search).get('id');
     var p = ASSAF.getProduct(id) || ASSAF.PRODUCTS[0];
-    document.title = p.name + ' — Assaf Parfums';
-    var meta = $('meta[name="description"]'); if (meta) meta.setAttribute('content', p.description);
+    document.title = p.name + ' — Assaf Perfumes';
+    var meta = $('meta[name="description"]'); if (meta) meta.setAttribute('content', p.tagline + '. ' + (p.rtl ? '' : p.description).slice(0, 140));
     var root = $('[data-product]');
-    var size = ASSAF.SIZES[0].id, qty = 1;
-    var idx = ASSAF.PRODUCTS.indexOf(p);
-    var prevP = ASSAF.PRODUCTS[(idx - 1 + ASSAF.PRODUCTS.length) % ASSAF.PRODUCTS.length];
-    var nextP = ASSAF.PRODUCTS[(idx + 1) % ASSAF.PRODUCTS.length];
+    var start = p.variants.findIndex(function (v) { return v.id === id; });
+    var size = String(start > -1 ? start : firstAvail(p)), qty = 1;
+    var list = ASSAF.PRODUCTS.filter(function (x) { return x.family === p.family; });
+    var idx = list.indexOf(p);
+    var prevP = list[(idx - 1 + list.length) % list.length];
+    var nextP = list[(idx + 1) % list.length];
+    var notes = p.notes;
 
     root.style.setProperty('--tint', p.liquid[0]); root.style.setProperty('--tint2', p.liquid[1]);
     root.innerHTML =
-      '<div class="pdp-media"><div class="pdp-stage"><div class="pdp-bottle">' + ASSAF.bottle(p) + '</div>' +
-      '<a class="pdp-switch prev" href="product.html?id=' + prevP.id + '" aria-label="Previous: ' + esc(prevP.name) + '">‹</a>' +
-      '<a class="pdp-switch next" href="product.html?id=' + nextP.id + '" aria-label="Next: ' + esc(nextP.name) + '">›</a></div></div>' +
+      '<div class="pdp-media"><div class="pdp-stage"><div class="pdp-bottle" data-pdp-img>' + ASSAF.bottle(p, { variant: +size, eager: true }) + '</div>' +
+      (list.length > 1 ? '<a class="pdp-switch prev" href="product.html?id=' + prevP.id + '" aria-label="Previous: ' + esc(prevP.name) + '">‹</a>' +
+      '<a class="pdp-switch next" href="product.html?id=' + nextP.id + '" aria-label="Next: ' + esc(nextP.name) + '">›</a>' : '') + '</div></div>' +
       '<div class="pdp-info">' +
-      '<nav class="crumbs"><a href="index.html">Home</a> / <a href="shop.html">Shop</a> / <a href="shop.html?family=' + p.family + '">' + p.family + '</a></nav>' +
-      (p.badge ? '<span class="badge static">' + p.badge + '</span>' : '') +
+      '<nav class="crumbs"><a href="index.html">Home</a> / <a href="shop.html">Shop</a> / <a href="shop.html?family=' + encodeURIComponent(p.family) + '">' + p.family + '</a></nav>' +
+      (p.badge ? '<span class="badge static' + (p.available ? '' : ' muted-badge') + '">' + p.badge + '</span>' : '') +
       '<h1>' + esc(p.name) + '</h1><p class="lead">' + esc(p.tagline) + '</p>' +
-      '<p class="pdp-price" data-price>' + money(p.price) + '</p>' +
-      '<p>' + esc(p.description) + '</p>' +
-      '<div class="opt"><span class="opt-label">Size</span><div class="sizes">' + ASSAF.SIZES.map(function (s, i) {
-        return '<button data-size-opt="' + s.id + '"' + (i === 0 ? ' class="active"' : '') + '>' + s.label + '<small>' + money(p.price * s.mult) + '</small></button>';
+      '<p class="pdp-price" data-price></p>' +
+      (p.description ? '<p class="pdp-desc"' + (p.rtl ? ' dir="rtl" lang="ar"' : '') + '>' + esc(p.description) + '</p>' : '') +
+      '<div class="opt"><span class="opt-label">' + (p.variants.length > 1 ? 'Choose size' : 'Size') + '</span><div class="sizes">' + p.variants.map(function (v, i) {
+        return '<button data-size-opt="' + i + '"' + (v.available ? '' : ' class="unavailable"') + '>' + esc(v.label) + '<small>' + (v.available ? money(v.price) : 'Sold out') + '</small></button>';
       }).join('') + '</div></div>' +
       '<div class="buy-row"><div class="qty qty-lg"><button data-pq="-1" aria-label="Decrease">−</button><span data-pqty>1</span><button data-pq="1" aria-label="Increase">+</button></div>' +
       '<button class="btn btn-gold grow" data-buy>Add to bag</button></div>' +
       '<button class="btn btn-ghost btn-block" data-buy-now>Buy it now</button>' +
-      '<ul class="perks"><li>Free delivery over ' + money(FREE_SHIP) + '</li><li>Complimentary sample &amp; gift wrap</li><li>14-day returns on unopened bottles</li></ul>' +
-      '<div class="specs"><div><span>Family</span><strong>' + p.family + '</strong></div><div><span>For</span><strong>' + p.gender + '</strong></div>' +
-      '<div><span>Longevity</span><strong>' + p.longevity + '</strong></div><div><span>Intensity</span><strong class="dots">' +
-      [1, 2, 3, 4, 5].map(function (n) { return '<i class="' + (n <= p.intensity ? 'on' : '') + '"></i>'; }).join('') + '</strong></div></div>' +
-      '<div class="pyramid"><h3>Olfactory pyramid</h3>' +
-      [['Top', 'top'], ['Heart', 'heart'], ['Base', 'base']].map(function (t) {
-        return '<div class="tier"><span>' + t[0] + ' notes</span><p>' + p.notes[t[1]].join(' · ') + '</p></div>';
-      }).join('') + '</div>' +
-      '<details class="acc"><summary>How to wear</summary><p>Apply to pulse points — wrists, neck and behind the ears — from 15 cm. For a longer trail, mist onto clothing or layer with a matching Assaf oil.</p></details>' +
-      '<details class="acc"><summary>Delivery &amp; returns</summary><p>Riyadh, Jeddah and Dammam: 1–2 business days. Rest of KSA: 2–4 days. GCC: 3–6 days. Unopened bottles can be returned within 14 days.</p></details>' +
-      '<details class="acc"><summary>Ingredients</summary><p>Alcohol Denat., Parfum (Fragrance), Aqua (Water). Concentration: Eau de Parfum, 20%.</p></details>' +
+      '<ul class="perks"><li>Free express shipping over ' + money(FREE_SHIP) + '</li><li>Gift-ready Assaf packaging</li><li>Questions? <a href="mailto:support@assaf.ae">support@assaf.ae</a></li></ul>' +
+      '<div class="specs"><div><span>Collection</span><strong>' + p.family + '</strong></div><div><span>For</span><strong>' + p.gender + '</strong></div>' +
+      '<div><span>Sizes</span><strong>' + p.variants.map(function (v) { return esc(v.label.split(' · ')[0]); }).join(', ') + '</strong></div><div><span>Status</span><strong>' + (p.available ? 'In stock' : 'Sold out') + '</strong></div></div>' +
+      (notes ? '<div class="pyramid"><h3>Fragrance notes</h3>' +
+      [['Top', 'top'], ['Heart', 'heart'], ['Base', 'base']].filter(function (t) { return notes[t[1]].length; }).map(function (t) {
+        return '<div class="tier"><span>' + t[0] + ' notes</span><p>' + notes[t[1]].map(esc).join(' · ') + '</p></div>';
+      }).join('') + '</div>' : '') +
+      '<details class="acc"><summary>How to wear</summary><p>Spray onto pulse points — wrists, neck and behind the ears — from about 15 cm. For a longer trail, mist lightly onto clothing.</p></details>' +
+      '<details class="acc"><summary>Shipping</summary><p>Free express shipping on orders over ' + money(FREE_SHIP) + '. For delivery times, exchanges and returns, contact <a href="mailto:support@assaf.ae">support@assaf.ae</a>.</p></details>' +
       '</div>';
 
-    function updPrice() { $('[data-price]', root).textContent = money(priceFor(p, size) * qty); }
+    var buyBtn = $('[data-buy]', root), nowBtn = $('[data-buy-now]', root);
+    function upd() {
+      var v = variant(p, size);
+      $('[data-price]', root).innerHTML = priceHTML(v.price * qty, v.compare ? v.compare * qty : null) +
+        (v.compare ? ' <span class="save">Save ' + Math.round(100 - v.price / v.compare * 100) + '%</span>' : '');
+      $$('[data-size-opt]', root).forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-size-opt') === size); });
+      buyBtn.disabled = nowBtn.disabled = !v.available;
+      buyBtn.textContent = v.available ? 'Add to bag' : 'Sold out';
+      nowBtn.hidden = !v.available;
+      var sp = $('[data-sticky-price]'); if (sp) sp.textContent = money(v.price * qty);
+    }
     root.addEventListener('click', function (e) {
       var s = e.target.closest('[data-size-opt]');
-      if (s) { size = s.getAttribute('data-size-opt'); $$('[data-size-opt]', root).forEach(function (b) { b.classList.toggle('active', b === s); }); updPrice(); }
+      if (s) {
+        size = s.getAttribute('data-size-opt');
+        $('[data-pdp-img]', root).innerHTML = ASSAF.bottle(p, { variant: +size, eager: true });
+        upd();
+      }
       var q = e.target.closest('[data-pq]');
-      if (q) { qty = Math.max(1, Math.min(20, qty + (+q.getAttribute('data-pq')))); $('[data-pqty]', root).textContent = qty; updPrice(); }
+      if (q) { qty = Math.max(1, Math.min(20, qty + (+q.getAttribute('data-pq')))); $('[data-pqty]', root).textContent = qty; upd(); }
       if (e.target.closest('[data-buy]')) { Cart.add(p.id, size, qty); openCart(); }
       if (e.target.closest('[data-buy-now]')) { Cart.add(p.id, size, qty); location.href = 'checkout.html'; }
     });
 
     // sticky mobile add-to-bag bar
     var sticky = $('[data-sticky-buy]');
-    sticky.innerHTML = '<div class="container"><span><strong>' + esc(p.name) + '</strong><small data-sticky-price>' + money(p.price) + '</small></span><button class="btn btn-gold" data-sticky-add>Add to bag</button></div>';
+    sticky.innerHTML = '<div class="container"><span><strong>' + esc(p.name) + '</strong><small data-sticky-price></small></span><button class="btn btn-gold" data-sticky-add>Add to bag</button></div>';
     $('[data-sticky-add]').addEventListener('click', function () { Cart.add(p.id, size, qty); });
-    var buyBtn = $('[data-buy]', root);
+    upd();
     window.addEventListener('scroll', function () {
       var r = buyBtn.getBoundingClientRect();
-      sticky.classList.toggle('show', r.bottom < 0);
-      $('[data-sticky-price]').textContent = money(priceFor(p, size) * qty);
+      sticky.classList.toggle('show', r.bottom < 0 && variant(p, size).available);
     }, { passive: true });
 
     // related
-    var rel = ASSAF.PRODUCTS.filter(function (x) { return x.id !== p.id; })
-      .sort(function (a, b) { return (b.family === p.family) - (a.family === p.family); }).slice(0, 8);
+    var rel = ASSAF.PRODUCTS.filter(function (x) { return x.id !== p.id && x.available; })
+      .sort(function (a, b) { return ((b.family === p.family) - (a.family === p.family)) || (b.bestseller - a.bestseller); }).slice(0, 10);
     $('[data-related]').innerHTML = rel.map(function (x) { return ASSAF.card(x); }).join('');
     ASSAF.carousel($('#related'));
   };
@@ -571,7 +616,7 @@
       box.innerHTML = '<div class="cart-layout"><div class="cart-lines">' + Cart.items.map(function (i, idx) {
         var p = ASSAF.getProduct(i.id); if (!p) return '';
         return '<div class="line line-lg"><a href="product.html?id=' + p.id + '" class="line-thumb" style="--tint:' + p.liquid[0] + '">' + ASSAF.bottle(p, { shadow: false }) + '</a>' +
-          '<div class="line-info"><span class="eyebrow">' + p.family + '</span><a href="product.html?id=' + p.id + '"><strong>' + esc(p.name) + '</strong></a><span class="muted small">' + sizeInfo(i.size).label + ' · ' + money(priceFor(p, i.size)) + ' each</span>' +
+          '<div class="line-info"><span class="eyebrow">' + p.family + '</span><a href="product.html?id=' + p.id + '"><strong>' + esc(p.name) + '</strong></a><span class="muted small">' + variant(p, i.size).label + ' · ' + money(priceFor(p, i.size)) + ' each</span>' +
           '<div class="qty" data-idx="' + idx + '"><button data-q="-1" aria-label="Decrease">−</button><span>' + i.qty + '</span><button data-q="1" aria-label="Increase">+</button></div></div>' +
           '<div class="line-price">' + money(priceFor(p, i.size) * i.qty) + '<button class="link-btn" data-remove="' + idx + '">Remove</button></div></div>';
       }).join('') + '</div>' + summaryHTML(sub, true) + '</div>';
@@ -579,19 +624,18 @@
     Cart.listeners.push(render); render();
   };
 
-  function shippingFor(sub, method) {
-    if (method === 'express') return 45;
-    return sub >= FREE_SHIP ? 0 : 25;
-  }
+  // NOTE: the delivery fee below is a placeholder — set it to match assaf.ae.
+  var SHIP_FEE = 25;
+  function shippingFor(sub) { return sub >= FREE_SHIP ? 0 : SHIP_FEE; }
   function summaryHTML(sub, withBtn, method, discount) {
-    var ship = shippingFor(sub, method || 'standard');
+    var ship = shippingFor(sub);
     discount = discount || 0;
     return '<aside class="summary"><h3>Order summary</h3>' +
       '<div class="row"><span>Subtotal</span><span>' + money(sub) + '</span></div>' +
       (discount ? '<div class="row accent"><span>Discount</span><span>−' + money(discount) + '</span></div>' : '') +
       '<div class="row"><span>Delivery</span><span>' + (ship ? money(ship) : 'Free') + '</span></div>' +
       '<div class="row total"><span>Total</span><span>' + money(sub - discount + ship) + '</span></div>' +
-      '<p class="muted small">Prices include 15% VAT.</p>' +
+      '<p class="muted small">' + (sub >= FREE_SHIP ? 'Free express shipping applied.' : 'Free express shipping on orders over ' + money(FREE_SHIP) + '.') + '</p>' +
       (withBtn ? '<a href="checkout.html" class="btn btn-gold btn-block">Proceed to checkout</a><a href="shop.html" class="btn btn-ghost btn-block">Continue shopping</a>' : '') +
       '</aside>';
   }
@@ -606,22 +650,14 @@
     function method() { var m = $('input[name="shipping"]:checked', form); return m ? m.value : 'standard'; }
     function render() {
       var sub = Cart.subtotal();
-      discount = code === 'ASSAF10' ? Math.round(sub * 0.1) : 0;
+      discount = 0;
       side.innerHTML = '<div class="mini-lines">' + Cart.items.map(function (i) {
         var p = ASSAF.getProduct(i.id); if (!p) return '';
         return '<div class="mini"><div class="line-thumb sm" style="--tint:' + p.liquid[0] + '">' + ASSAF.bottle(p, { shadow: false }) + '<b>' + i.qty + '</b></div>' +
-          '<div><strong>' + esc(p.name) + '</strong><span class="muted small">' + sizeInfo(i.size).label + '</span></div><span>' + money(priceFor(p, i.size) * i.qty) + '</span></div>';
+          '<div><strong>' + esc(p.name) + '</strong><span class="muted small">' + variant(p, i.size).label + '</span></div><span>' + money(priceFor(p, i.size) * i.qty) + '</span></div>';
       }).join('') + '</div>' +
-        '<div class="promo"><input id="promo" placeholder="Gift card or discount code" value="' + esc(code) + '"/><button type="button" class="btn btn-ghost" data-apply>Apply</button></div>' +
-        summaryHTML(sub, false, method(), discount);
+        summaryHTML(sub, false, method(), 0);
     }
-    side.addEventListener('click', function (e) {
-      if (e.target.closest('[data-apply]')) {
-        var v = $('#promo').value.trim().toUpperCase();
-        if (v === 'ASSAF10') { code = v; toast('Code applied — 10% off'); } else { code = ''; toast('That code is not valid'); }
-        render();
-      }
-    });
     form.addEventListener('change', function (e) {
       if (e.target.name === 'shipping') render();
       if (e.target.name === 'payment') $('[data-card-fields]').hidden = e.target.value !== 'card';
@@ -638,7 +674,7 @@
         if (!valid) ok = false;
       });
       if (!ok) { toast('Please complete the highlighted fields'); var bad = $('.field.invalid input, .field.invalid select', form); if (bad) bad.focus(); return; }
-      var sub = Cart.subtotal(), ship = shippingFor(sub, method());
+      var sub = Cart.subtotal(), ship = shippingFor(sub);
       var order = {
         no: 'AS-' + Date.now().toString().slice(-7),
         name: form.firstName.value, email: form.email.value,
@@ -650,10 +686,9 @@
       $('[data-checkout]').innerHTML =
         '<div class="confirm reveal in"><div class="seal">✦</div><span class="eyebrow">Order ' + order.no + '</span>' +
         '<h1>Thank you, ' + esc(order.name) + '</h1>' +
-        '<p class="lead">Your order is confirmed and is being prepared with care in our atelier.</p>' +
-        '<p class="muted">A confirmation will be sent to <strong>' + esc(order.email) + '</strong>. Estimated delivery to ' + esc(order.city) + ': ' +
-        (order.method === 'express' ? '1–2' : '2–4') + ' business days.</p>' +
-        '<div class="confirm-total">Total paid ' + (order.payment === 'cod' ? '(on delivery)' : '') + ': <strong>' + money(order.total) + '</strong></div>' +
+        '<p class="lead">Your order has been received.</p>' +
+        '<p class="muted">A confirmation will be sent to <strong>' + esc(order.email) + '</strong>. Our team will contact you about delivery to ' + esc(order.city) + '.</p>' +
+        '<div class="confirm-total">Order total: <strong>' + money(order.total) + '</strong></div>' +
         '<a href="shop.html" class="btn btn-gold">Continue shopping</a></div>';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -672,7 +707,7 @@
       var ok = true;
       $$('[required]', f).forEach(function (x) { var v = x.checkValidity(); x.closest('.field').classList.toggle('invalid', !v); if (!v) ok = false; });
       if (!ok) { toast('Please complete the highlighted fields'); return; }
-      f.innerHTML = '<div class="confirm small-confirm"><div class="seal">✦</div><h3>Message received</h3><p class="muted">Our concierge will reply within one business day.</p></div>';
+      f.innerHTML = '<div class="confirm small-confirm"><div class="seal">✦</div><h3>Message received</h3><p class="muted">Our team will get back to you soon.</p></div>';
     });
   };
 

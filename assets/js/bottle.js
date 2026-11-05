@@ -1,4 +1,5 @@
-/* ASSAF — procedural perfume bottle renderer (SVG).
+/* ASSAF — product visual: the real product photo when available, otherwise a
+   procedural SVG bottle.
    Every product gets a bottle drawn from its liquid colours, cap finish and shape,
    so the site looks complete without photography. Replace with <img> tags once
    product photography is available (see README). */
@@ -28,6 +29,12 @@
 
   ASSAF.bottle = function (p, opts) {
     opts = opts || {};
+    var v = p.variants && p.variants[opts.variant || 0];
+    var src = (v && v.image) || p.image;
+    if (src) {
+      return '<img class="bottle-img" src="' + src + '" alt="' + String(p.name).replace(/"/g, '&quot;') + '"' +
+        (opts.eager ? '' : ' loading="lazy"') + ' decoding="async" draggable="false" />';
+    }
     var n = ++uid;
     var L = 'liq' + n, C = 'cap' + n, G = 'gls' + n, S = 'shd' + n;
     var cap = CAPS[p.cap] || CAPS.gold;
