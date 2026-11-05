@@ -330,6 +330,34 @@ function findCapSplit(canvas) {
   return best > 18 ? at : Math.round(top + (H - top) * .24);
 }
 
+/* The photos only show bottles with the cap on, so the pump under the cap is modelled:
+   crimped metal collar on the neck, stem, and an actuator button with a nozzle hole. */
+function makeSprayer(neckW, metalColor) {
+  const g = new THREE.Group();
+  const metal = new THREE.MeshPhysicalMaterial({ color: metalColor, metalness: 1, roughness: .22, clearcoat: .7, clearcoatRoughness: .15 });
+  const dark = new THREE.MeshStandardMaterial({ color: '#141416', roughness: .5 });
+  const R = Math.max(.07, neckW * .5);                  // collar radius follows the bottle neck
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(R * .92, R, .1, 48), metal);
+  collar.position.y = .05; g.add(collar);
+  const crimp = new THREE.Mesh(new THREE.TorusGeometry(R * .9, .012, 10, 48), metal);
+  crimp.rotation.x = Math.PI / 2; crimp.position.y = .1; g.add(crimp);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(R * .22, R * .22, .07, 24), metal);
+  stem.position.y = .135; g.add(stem);
+  const act = new THREE.Group(); act.position.y = .17; g.add(act);  // actuator (moves when pressed)
+  const btn = new THREE.Mesh(new THREE.CylinderGeometry(R * .62, R * .66, .13, 48), metal);
+  btn.position.y = .065; act.add(btn);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(R * .6, R * .62, .012, 48), new THREE.MeshPhysicalMaterial({ color: metalColor, metalness: 1, roughness: .1 }));
+  top.position.y = .136; act.add(top);
+  // nozzle orifice on the side of the button, aimed to the right/front (towards the viewer)
+  const dir = new THREE.Vector3(.85, 0, .53).normalize();
+  const hole = new THREE.Mesh(new THREE.CylinderGeometry(R * .11, R * .11, .02, 16), dark);
+  hole.position.copy(dir).multiplyScalar(R * .64); hole.position.y = .075;
+  hole.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); act.add(hole);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  g.userData = { actuator: act, nozzleLocal: hole.position.clone().add(dir.clone().multiplyScalar(.02)), dir, height: .3 };
+  return g;
+}
+
 async function photoProduct(product, variant, renderer) {
   const src = (variant && variant.image) || product.image;
   if (!src) return null;
@@ -381,6 +409,21 @@ async function photoProduct(product, variant, renderer) {
     capP.mesh.position.y = capP.h / 2; cap.add(capP.mesh); g.add(cap);
     tex.dispose();
     g.userData.capRest = cap.position.clone();
+    // neck width + centre from the silhouette just below the cap line
+    const md = maskC.getContext('2d', { willReadFrequently: true }).getImageData(0, Math.min(crop.height - 1, split + Math.round(crop.height * .03)), crop.width, 1).data;
+    let x0 = -1, x1 = -1;
+    for (let x = 0; x < crop.width; x++) if (md[x * 4 + 3] > 128) { if (x0 < 0) x0 = x; x1 = x; }
+    const bodyW = x0 < 0 ? w * .5 : w * (x1 - x0) / crop.width;
+    const cx = x0 < 0 ? 0 : w * ((x0 + x1) / 2 / crop.width - .5);
+    // metal finish sampled from the cap (silver / gold / black caps get a matching pump)
+    const cd = crop.getContext('2d').getImageData(Math.round(crop.width * .5), Math.round(split * .5), 1, 1).data;
+    const lum = (cd[0] + cd[1] + cd[2]) / 3;
+    const metalColor = lum < 70 ? '#2a2a2e' : (cd[0] - cd[2] > 25 ? '#C9A96E' : '#D4D4D8');
+    const sprayer = makeSprayer(Math.min(bodyW * .38, .34), metalColor);
+    sprayer.position.set(cx, body.h - .01, .0);
+    sprayer.visible = false;
+    g.add(sprayer);
+    g.userData.sprayer = sprayer;
   } else {
     const all = piece(0, crop.height); all.mesh.position.y = h / 2; g.add(all.mesh); tex.dispose();
   }
@@ -389,7 +432,9 @@ async function photoProduct(product, variant, renderer) {
     frame.position.set(0, h / 2, -.01); frame.castShadow = true; g.add(frame);
   }
   const bodyTop = split ? h * (crop.height - split) / crop.height : h * .97;
-  Object.assign(g.userData, { placeholder: false, photo: true, height: h, width: w, cap, sprayable: !(isSet || cut.failed), nozzle: new THREE.Vector3(0, bodyTop + .02, .02) });
+  const sp = g.userData.sprayer;
+  const nozzle = sp ? sp.position.clone().add(sp.userData.actuator.position).add(sp.userData.nozzleLocal) : new THREE.Vector3(0, bodyTop + .02, .02);
+  Object.assign(g.userData, { placeholder: false, photo: true, height: h, width: w, cap, sprayable: !(isSet || cut.failed), nozzle, nozzleDir: sp ? sp.userData.dir : null });
   return g;
 }
 
@@ -606,11 +651,11 @@ export async function createProductStage(host, product, opts = {}) {
   }
   function emit(n) {
     const origin = nozzleWorld();
-    const dir = new THREE.Vector3(.8, .28, .55).normalize();
+    const dir = model && model.userData.nozzleDir ? model.userData.nozzleDir.clone().setY(.12).normalize().transformDirection(spin.matrixWorld) : new THREE.Vector3(.8, .28, .55).normalize();
     for (let i = 0; i < n; i++) {
       const p = mist.particles.find(q => q.life <= 0); if (!p) return;
-      p.p.copy(origin).add(tmp.set((Math.random() - .5) * .03, (Math.random() - .5) * .03, 0));
-      const spread = .32;
+      p.p.copy(origin).add(tmp.set((Math.random() - .5) * .01, (Math.random() - .5) * .01, 0));
+      const spread = .22;
       p.v.copy(dir).add(tmp.set((Math.random() - .5) * spread, (Math.random() - .5) * spread, (Math.random() - .5) * spread)).normalize().multiplyScalar(1.6 + Math.random() * 1.8);
       p.max = p.life = 1 + Math.random() * .9;
       p.s = .06 + Math.random() * .08;
@@ -639,6 +684,7 @@ export async function createProductStage(host, product, opts = {}) {
   let spraying = false;
   function capPose(t) { // 0 = on the bottle, 1 = lifted off and set down beside it
     const cap = model && model.userData.cap; if (!cap) return;
+    if (model.userData.sprayer) model.userData.sprayer.visible = t > .02;
     const rest = model.userData.capRest, w = model.userData.width || .6;
     const lift = Math.sin(Math.min(1, t * 1.6) * Math.PI / 2);   // goes up first…
     const side = Math.max(0, (t - .35) / .65);                     // …then moves aside and down
@@ -653,7 +699,9 @@ export async function createProductStage(host, product, opts = {}) {
     await tween(760, t => { state.zoom = t; }, ease.inOutCubic);          // 2. close-up on the bottle
     sprayT = .5;                                                            // 3. psst
     host.dispatchEvent(new CustomEvent('assaf:spray'));
-    await tween(420, t => { state.squash = Math.sin(t * Math.PI) * .7; }, ease.outCubic);
+    const act = model.userData.sprayer && model.userData.sprayer.userData.actuator, a0 = act ? act.position.y : 0;
+    await tween(420, t => { const k = Math.sin(t * Math.PI); state.squash = k * .25; if (act) act.position.y = a0 - k * .045; }, ease.outCubic);
+    if (act) act.position.y = a0;
     await new Promise(res => setTimeout(res, 900));                        // let the mist hang in the air
     await Promise.all([
       hasCap ? tween(560, t => capPose(1 - t), ease.inOutCubic, 150) : null, // 4. cap back on
