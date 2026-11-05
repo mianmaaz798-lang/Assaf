@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Shop All Fragrances — Assaf Perfumes</title>
   <meta name="description" content="Shop every Assaf fragrance: Arrogate, Frankel, Enable, Old Era, niche perfumes and gift sets." />
-  <meta name="theme-color" content="#0e0b08" />
+  <meta name="theme-color" content="#FAFAF7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0B0B0C" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0b08'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' fill='%23e7c987' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>try{var t=localStorage.getItem("assaf_theme");if(t)document.documentElement.setAttribute("data-theme",JSON.parse(t))}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body data-page="shop" data-solid-header>
@@ -37,12 +39,13 @@
     </div>
     <section class="container" style="padding-bottom:120px">
       <div class="shop-meta"><span class="muted" data-count></span></div>
-      <div class="grid" data-grid></div>
+      <div class="grid" data-grid aria-live="polite"><div class="card card-skel" aria-hidden="true"><div class="card-media skel"></div><div class="sk-line skel"></div><div class="sk-line short skel"></div></div><div class="card card-skel" aria-hidden="true"><div class="card-media skel"></div><div class="sk-line skel"></div><div class="sk-line short skel"></div></div><div class="card card-skel" aria-hidden="true"><div class="card-media skel"></div><div class="sk-line skel"></div><div class="sk-line short skel"></div></div><div class="card card-skel" aria-hidden="true"><div class="card-media skel"></div><div class="sk-line skel"></div><div class="sk-line short skel"></div></div><div class="card card-skel" aria-hidden="true"><div class="card-media skel"></div><div class="sk-line skel"></div><div class="sk-line short skel"></div></div><div class="card card-skel" aria-hidden="true"><div class="card-media skel"></div><div class="sk-line skel"></div><div class="sk-line short skel"></div></div><div class="card card-skel" aria-hidden="true"><div class="card-media skel"></div><div class="sk-line skel"></div><div class="sk-line short skel"></div></div><div class="card card-skel" aria-hidden="true"><div class="card-media skel"></div><div class="sk-line skel"></div><div class="sk-line short skel"></div></div></div>
     </section>
   </main>
 
   <script src="assets/js/data.js"></script>
   <script src="assets/js/bottle.js"></script>
   <script src="assets/js/main.js"></script>
+  <script src="assets/js/unbox.js"></script>
 </body>
 </html>

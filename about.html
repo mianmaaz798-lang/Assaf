@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Our Story — Assaf Perfumes</title>
   <meta name="description" content="The story of Assaf Perfumes: Arabian heritage meets modern perfumery." />
-  <meta name="theme-color" content="#0e0b08" />
+  <meta name="theme-color" content="#FAFAF7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0B0B0C" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0b08'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' fill='%23e7c987' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>try{var t=localStorage.getItem("assaf_theme");if(t)document.documentElement.setAttribute("data-theme",JSON.parse(t))}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body data-page="about">
@@ -45,11 +47,11 @@
     <section class="section">
       <div class="container">
         <div class="section-head"><div class="reveal"><span class="eyebrow">What we stand for</span><h2>The Assaf way</h2></div></div>
-        <div class="features reveal" style="--line-light:var(--line)">
-          <div class="feature" style="background:var(--cream)"><span class="num">i.</span><h3>Identity</h3><p style="color:var(--muted)">Fragrances rooted in Gulf culture and taste.</p></div>
-          <div class="feature" style="background:var(--cream)"><span class="num">ii.</span><h3>Expertise</h3><p style="color:var(--muted)">Created with internationally celebrated perfumers.</p></div>
-          <div class="feature" style="background:var(--cream)"><span class="num">iii.</span><h3>Performance</h3><p style="color:var(--muted)">Concentrations made for projection and staying power.</p></div>
-          <div class="feature" style="background:var(--cream)"><span class="num">iv.</span><h3>Value</h3><p style="color:var(--muted)">Luxury fragrances and gift sets at accessible prices.</p></div>
+        <div class="features light-features reveal">
+          <div class="feature"><span class="num">i.</span><h3>Identity</h3><p>Fragrances rooted in Gulf culture and taste.</p></div>
+          <div class="feature"><span class="num">ii.</span><h3>Expertise</h3><p>Created with internationally celebrated perfumers.</p></div>
+          <div class="feature"><span class="num">iii.</span><h3>Performance</h3><p>Concentrations made for projection and staying power.</p></div>
+          <div class="feature"><span class="num">iv.</span><h3>Value</h3><p>Luxury fragrances and gift sets at accessible prices.</p></div>
         </div>
         <div class="center" style="margin-top:60px"><a href="shop.html" class="btn btn-gold">Explore the collection</a></div>
       </div>
@@ -59,5 +61,6 @@
   <script src="assets/js/data.js"></script>
   <script src="assets/js/bottle.js"></script>
   <script src="assets/js/main.js"></script>
+  <script src="assets/js/unbox.js"></script>
 </body>
 </html>

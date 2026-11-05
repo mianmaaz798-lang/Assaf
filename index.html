@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Assaf Perfumes</title>
   <meta name="description" content="Assaf Perfumes — where Gulf identity meets the genius of the world’s greatest perfumers. Shop Arrogate, Frankel, Enable, niche fragrances and gift sets." />
-  <meta name="theme-color" content="#0e0b08" />
+  <meta name="theme-color" content="#FAFAF7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0B0B0C" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0b08'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='34' fill='%23e7c987' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>try{var t=localStorage.getItem("assaf_theme");if(t)document.documentElement.setAttribute("data-theme",JSON.parse(t))}catch(e){}</script>
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body data-page="home">
@@ -20,19 +22,16 @@
     <section class="hero">
       <div class="container hero-grid">
         <div class="hero-copy">
-          <span class="eyebrow light reveal">Assaf Perfumes</span>
+          <span class="eyebrow reveal">Assaf Perfumes</span>
           <h1 class="reveal" style="--d:100ms">Where Gulf identity<br/>meets <em>the world’s</em><br/>greatest perfumers</h1>
           <p class="reveal" style="--d:200ms">Bold, long-lasting fragrances composed with renowned perfumers — from the iconic Arrogate and Frankel collections to our niche creations and gift sets.</p>
           <div class="hero-cta reveal" style="--d:300ms">
-            <a href="shop.html" class="btn btn-gold">Shop the collection <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-            <a href="product.html" data-hero-link class="btn btn-ghost-light">Discover <span data-hero-name></span></a>
+            <a href="shop.html" class="btn btn-gold">Shop the collection <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a href="product.html" data-hero-link class="btn btn-ghost">Unbox <span data-hero-name></span></a>
           </div>
         </div>
         <div class="hero-visual">
-          <div class="hero-glow"></div>
-          <div class="hero-ring"></div>
-          <div class="hero-ring r2"></div>
-          <a href="product.html" data-hero-link class="hero-bottle" aria-label="View featured fragrance"><span class="plate" data-hero-bottle></span></a>
+          <a href="product.html" data-hero-link class="hero-stage" aria-label="Unbox the featured fragrance" data-hero-bottle></a>
           <div class="hero-tag t1"><strong data-hero-name></strong><span data-hero-notes></span></div>
           <div class="hero-tag t2"><strong>Bestseller</strong>From <span data-hero-price></span></div>
         </div>
@@ -52,7 +51,7 @@
           <h2>Our most-loved<br/>fragrances</h2>
         </div>
         <div class="reveal" style="--d:120ms">
-          <p>Every bottle is a story. Hover to pause, drag to explore, tap any fragrance to discover it.</p>
+          <p>Every bottle is a story. Hover to pause, drag to explore, tap any fragrance to unbox it.</p>
           <p class="marquee-hint" style="margin-top:16px">Drag to explore <i></i></p>
         </div>
       </div>
@@ -89,7 +88,7 @@
     </section>
 
     <!-- BESTSELLERS -->
-    <section class="section" id="bestsellers" style="background:var(--cream)">
+    <section class="section" id="bestsellers" style="background:var(--bg-2)">
       <div class="container">
         <div class="section-head">
           <div class="reveal"><span class="eyebrow">Most loved</span><h2>Bestsellers</h2></div>
@@ -154,6 +153,20 @@
       </div>
     </section>
 
+    <section class="section" id="recent" hidden>
+      <div class="container">
+        <div class="section-head">
+          <div><span class="eyebrow">Picked up where you left off</span><h2>Recently viewed</h2></div>
+          <div class="rail-controls">
+            <button class="round-btn" data-prev aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+            <button class="round-btn" data-next aria-label="Next"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </div>
+        <div class="rail" data-recent></div>
+        <div class="rail-progress"><span></span></div>
+      </div>
+    </section>
+
     <!-- NEWSLETTER -->
     <section class="section" style="padding-top:0">
       <div class="container">
@@ -175,5 +188,6 @@
   <script src="assets/js/data.js"></script>
   <script src="assets/js/bottle.js"></script>
   <script src="assets/js/main.js"></script>
+  <script src="assets/js/unbox.js"></script>
 </body>
 </html>

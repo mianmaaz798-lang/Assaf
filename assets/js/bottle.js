@@ -89,3 +89,48 @@
       '</svg>';
   };
 })();
+
+/* ---------------------------------------------------------------------------
+   ProductStage (photo version): the product on a lit studio sweep with a ground
+   shadow, light falloff tinted by the product colour, a glare highlight and an
+   optional pointer tilt (data-tilt). The 3D version lives in stage3d.js and is
+   mounted by ASSAF.ProductStage.mount3D() — see unbox.js.
+   --------------------------------------------------------------------------- */
+(function () {
+  ASSAF.stage = function (p, opts) {
+    opts = opts || {};
+    var v = p.variants && p.variants[opts.variant || 0];
+    return '<div class="stage"' + (opts.tilt ? ' data-tilt' : '') + ' style="--tint:' + p.liquid[0] + ';--tint2:' + p.liquid[1] + '">' +
+      '<span class="stage-shadow" aria-hidden="true"></span>' +
+      '<div class="stage-product">' + ASSAF.bottle(p, opts) + (v && v.image || p.image ? '<span class="img-skel skel" aria-hidden="true"></span>' : '') + '</div>' +
+      '<span class="stage-glare" aria-hidden="true"></span></div>';
+  };
+
+  // fade photos in once decoded (capture phase: load events don't bubble)
+  function done(e) { var t = e.target; if (t && t.classList && t.classList.contains('bottle-img')) t.classList.add('is-loaded'); }
+  document.addEventListener('load', done, true);
+  document.addEventListener('error', done, true);
+
+  // pointer tilt for any [data-tilt] stage
+  var raf = 0, cur = null, ev = null;
+  function apply() {
+    raf = 0; if (!cur || !ev) return;
+    var r = cur.getBoundingClientRect();
+    var x = (ev.clientX - r.left) / r.width, y = (ev.clientY - r.top) / r.height;
+    cur.style.setProperty('--ry', ((x - .5) * 16).toFixed(2) + 'deg');
+    cur.style.setProperty('--rx', ((.5 - y) * 10).toFixed(2) + 'deg');
+    cur.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
+    cur.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+  }
+  function reset(el) { ['--rx', '--ry', '--mx', '--my'].forEach(function (k) { el.style.removeProperty(k); }); }
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.addEventListener('pointermove', function (e) {
+      if (e.pointerType === 'touch') return;
+      var s = e.target.closest && e.target.closest('[data-tilt]');
+      if (s !== cur) { if (cur) reset(cur); cur = s; }
+      if (!s) return;
+      ev = e; if (!raf) raf = requestAnimationFrame(apply);
+    }, { passive: true });
+    document.addEventListener('pointerleave', function () { if (cur) reset(cur); cur = null; });
+  }
+})();
